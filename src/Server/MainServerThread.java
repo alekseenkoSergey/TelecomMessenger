@@ -27,10 +27,11 @@ public class MainServerThread extends Thread {
                 while (client == null) {
                     client = serverSocket.accept();
                 }
+                textWriter.appendText("New client connected");
                 executor.execute(new ClientThread(client, textWriter));
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "IOExeption =(");
+            JOptionPane.showMessageDialog(null, e.getMessage());
             e.printStackTrace();
         }
     }

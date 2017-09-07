@@ -6,6 +6,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 
 public class ClientWindow extends JFrame {
@@ -51,21 +52,27 @@ public class ClientWindow extends JFrame {
         startListen.addActionListener(e -> {
             try {
                 int port = Integer.parseInt(fieldPort.getText());
-                socket = new Socket("127.0.0.1", port);
+                socket = new Socket(fieldAddress.getText(), port);
                 dataOutput = new DataOutputStream(socket.getOutputStream());
                 isConnected = true;
                 startListen.setEnabled(false);
                 stopListen.setEnabled(true);
             } catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(this, "Invalid port number!");
-                nfe.printStackTrace();
+            } catch (ConnectException ce){
+                JOptionPane.showMessageDialog(this, ce.getMessage());
             } catch (IOException ioex) {
-                JOptionPane.showMessageDialog(this, "IOExeption =(");
+                JOptionPane.showMessageDialog(this, ioex.getMessage());
                 ioex.printStackTrace();
             }
         });
         stopListen.addActionListener(e -> {
             isConnected = false;
+            try {
+                socket.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
             socket = null;
             dataOutput = null;
             startListen.setEnabled(true);

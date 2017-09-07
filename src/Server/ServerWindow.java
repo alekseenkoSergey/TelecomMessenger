@@ -7,6 +7,7 @@ public class ServerWindow extends JFrame {
     private JTextArea textArea;
 
     private TextWriter textWriter;
+    private MainServerThread mainServerThread;
 
     public ServerWindow(String title) {
         super(title);
@@ -49,38 +50,27 @@ public class ServerWindow extends JFrame {
 
     private void addControlPanel() {
         JPanel controlsPanel = new JPanel(true);
-        controlsPanel.setLayout(new GridLayout(2, 3));
-
-        JLabel labelProtocol = new JLabel("protocol:");
-        labelProtocol.setHorizontalAlignment(JLabel.CENTER);
-        JLabel labelPort = new JLabel("port:");
-        labelPort.setHorizontalAlignment(JLabel.CENTER);
+        controlsPanel.setLayout(new GridLayout(1, 3));
 
         JComboBox<String> fieldProtocol = new JComboBox<>(new String[]{"TCP", "UDP"});
         JTextField fieldPort = new JTextField();
 
-        JButton startListen = new JButton("Start listening");
-        startListen.addActionListener(e -> {
+        JButton startServer = new JButton("Start server");
+        startServer.addActionListener(e -> {
             try {
                 int port = Integer.parseInt(fieldPort.getText());
-                new MainServerThread(port, textWriter).start();
-                textWriter.appendText("Starting server.");
+                mainServerThread = new MainServerThread(port, textWriter);
+                mainServerThread.start();
+                textWriter.appendText("Server started on port " + port);
+                startServer.setEnabled(false);
             } catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(this, "Invalid port number!");
-                nfe.printStackTrace();
             }
         });
-        JButton stopListen = new JButton("Stop listening");
-        stopListen.addActionListener(e -> {
-            textWriter.appendText("Stop server.");
-        });
 
-        controlsPanel.add(labelProtocol);
-        controlsPanel.add(labelPort);
-        controlsPanel.add(startListen);
         controlsPanel.add(fieldProtocol);
         controlsPanel.add(fieldPort);
-        controlsPanel.add(stopListen);
+        controlsPanel.add(startServer);
         this.add(controlsPanel, BorderLayout.SOUTH);
     }
 }
