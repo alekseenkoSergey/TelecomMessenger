@@ -1,4 +1,6 @@
-package Server;
+package server;
+
+import support.TransportProtocol;
 
 import javax.swing.*;
 import java.awt.*;
@@ -52,14 +54,20 @@ public class ServerWindow extends JFrame {
         JPanel controlsPanel = new JPanel(true);
         controlsPanel.setLayout(new GridLayout(1, 3));
 
-        JComboBox<String> fieldProtocol = new JComboBox<>(new String[]{"TCP", "UDP"});
+        JComboBox<Enum> fieldProtocol = new JComboBox<>(TransportProtocol.values());
         JTextField fieldPort = new JTextField();
 
         JButton startServer = new JButton("Start server");
         startServer.addActionListener(e -> {
             try {
                 int port = Integer.parseInt(fieldPort.getText());
-                mainServerThread = new MainServerThread(port, textWriter);
+                TransportProtocol tp;
+                if (fieldProtocol.getItemAt(fieldProtocol.getSelectedIndex()) == TransportProtocol.TCP) {
+                    tp = TransportProtocol.TCP;
+                } else {
+                    tp = TransportProtocol.UDP;
+                }
+                mainServerThread = new MainServerThread(tp, port, textWriter);
                 mainServerThread.start();
                 textWriter.appendText("Server started on port " + port);
                 startServer.setEnabled(false);
