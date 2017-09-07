@@ -5,31 +5,29 @@ import java.awt.*;
 
 public class ServerWindow extends JFrame {
     private JTextArea textArea;
-    private JButton button;
 
-    private TextWriter textFieldWriter;
+    private TextWriter textWriter;
 
-    public ServerWindow(String title)  {
+    public ServerWindow(String title) {
         super(title);
 
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setLayout(new BorderLayout());
         this.setResizable(false);
-        addControls();
+        addInterface();
         this.pack();
         this.setVisible(true);
-
-        textArea.append("Starting server...\n");
-
-        //new MainServerThread(textFieldWriter).start();
     }
 
-    private void addControls() {
+    private void addInterface() {
+        addTextPanel();
+        addControlPanel();
+    }
 
-        // up
-        JPanel panel = new JPanel(true);
+    private void addTextPanel() {
+        JPanel textPanel = new JPanel(true);
 
-        panel.setLayout(new BorderLayout());
+        textPanel.setLayout(new BorderLayout());
 
         textArea = new JTextArea();
         textArea.setColumns(50);
@@ -37,30 +35,52 @@ public class ServerWindow extends JFrame {
         textArea.setEditable(false);
         textArea.setLineWrap(true);
 
-        textFieldWriter = new TextWriter(this.textArea);
+        textWriter = new TextWriter(this.textArea);
 
-        panel.add(textArea, BorderLayout.WEST);
+        textPanel.add(textArea, BorderLayout.WEST);
 
-        JScrollPane scroll = new JScrollPane (textArea);
+        JScrollPane scroll = new JScrollPane(textArea);
         scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-        panel.add(scroll, BorderLayout.EAST);
+        textPanel.add(scroll, BorderLayout.EAST);
 
-        this.add(panel, BorderLayout.NORTH);
+        this.add(textPanel, BorderLayout.NORTH);
+    }
 
-        // down
-        JPanel panel2 = new JPanel(true);
-        panel2.setLayout(new BorderLayout());
+    private void addControlPanel() {
+        JPanel controlsPanel = new JPanel(true);
+        controlsPanel.setLayout(new GridLayout(2, 3));
 
-        JComboBox<String> protocol = new JComboBox<>(new String[]{"TCP", "UDP"});
-        JTextField port = new JTextField();
-        JButton startListen = new JButton();
-        JButton stopListen = new JButton();
-        panel2.add(protocol);
-        panel2.add(port);
-        panel2.add(startListen);
-        panel2.add(stopListen);
+        JLabel labelProtocol = new JLabel("protocol:");
+        labelProtocol.setHorizontalAlignment(JLabel.CENTER);
+        JLabel labelPort = new JLabel("port:");
+        labelPort.setHorizontalAlignment(JLabel.CENTER);
 
-        this.add(panel2, BorderLayout.SOUTH);
+        JComboBox<String> fieldProtocol = new JComboBox<>(new String[]{"TCP", "UDP"});
+        JTextField fieldPort = new JTextField();
+
+        JButton startListen = new JButton("Start listening");
+        startListen.addActionListener(e -> {
+            try {
+                int port = Integer.parseInt(fieldPort.getText());
+                new MainServerThread(port, textWriter).start();
+                textWriter.appendText("Starting server.");
+            } catch (NumberFormatException nfe) {
+                JOptionPane.showMessageDialog(this, "Invalid port number!");
+                nfe.printStackTrace();
+            }
+        });
+        JButton stopListen = new JButton("Stop listening");
+        stopListen.addActionListener(e -> {
+            textWriter.appendText("Stop server.");
+        });
+
+        controlsPanel.add(labelProtocol);
+        controlsPanel.add(labelPort);
+        controlsPanel.add(startListen);
+        controlsPanel.add(fieldProtocol);
+        controlsPanel.add(fieldPort);
+        controlsPanel.add(stopListen);
+        this.add(controlsPanel, BorderLayout.SOUTH);
     }
 }
