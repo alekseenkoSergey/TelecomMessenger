@@ -17,10 +17,13 @@ public class ClientWindow extends JFrame {
     private boolean isConnected;
 
     private Socket socket;
-    private DataOutput TCPDataOutput;
+    private DataOutput dataOutput;
 
     private DatagramSocket datagramSocket;
     private InetAddress inetAddress;
+
+    private JButton connect;
+    private JButton disconnect;
 
     public ClientWindow(String title) {
         super(title);
@@ -53,8 +56,8 @@ public class ClientWindow extends JFrame {
         JTextField fieldPort = new JTextField();
         JTextField fieldAddress = new JTextField();
 
-        JButton connect = new JButton("Connect");
-        JButton disconnect = new JButton("Disconnect");
+        connect = new JButton("Connect");
+        disconnect = new JButton("Disconnect");
         disconnect.setEnabled(false);
         connect.addActionListener(e -> {
             try {
@@ -71,8 +74,11 @@ public class ClientWindow extends JFrame {
             if (tp == TransportProtocol.TCP) {
                 try {
                     socket = new Socket(fieldAddress.getText(), port);
-                    TCPDataOutput = new DataOutputStream(socket.getOutputStream());
-                    connected(connect, disconnect);
+                    dataOutput = new DataOutputStream(socket.getOutputStream());
+                    switchToConnectedMode();
+                } catch (IllegalArgumentException iae) {
+                    JOptionPane.showMessageDialog(this, iae.getMessage());
+                    iae.printStackTrace();
                 } catch (ConnectException ce) {
                     JOptionPane.showMessageDialog(this, ce.getMessage());
                 } catch (IOException ioex) {
@@ -83,7 +89,7 @@ public class ClientWindow extends JFrame {
                 try {
                     inetAddress = InetAddress.getByName(fieldAddress.getText());
                     datagramSocket = new DatagramSocket();
-                    connected(connect, disconnect);
+                    switchToConnectedMode();
                 } catch (UnknownHostException uhe) {
                     JOptionPane.showMessageDialog(this, uhe.getMessage());
                     uhe.printStackTrace();
@@ -94,14 +100,20 @@ public class ClientWindow extends JFrame {
             }
         });
         disconnect.addActionListener(e -> {
-            try {
-                socket.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
+            if (tp == TransportProtocol.TCP) {
+                try {
+                    socket.close();
+                } catch (IOException ioex) {
+                    ioex.printStackTrace();
+                }
+                socket = null;
+                dataOutput = null;
+            } else {
+                datagramSocket.close();
+                datagramSocket = null;
+                inetAddress = null;
             }
-            socket = null;
-            TCPDataOutput = null;
-            disconnected(connect, disconnect);
+            switchToDisconnectedMode();
         });
 
         connectPanel.add(labelProtocol);
@@ -115,13 +127,13 @@ public class ClientWindow extends JFrame {
         this.add(connectPanel, BorderLayout.NORTH);
     }
 
-    private void connected(JButton connect, JButton disconnect) {
+    private void switchToConnectedMode() {
         isConnected = true;
         connect.setEnabled(false);
         disconnect.setEnabled(true);
     }
 
-    private void disconnected(JButton connect, JButton disconnect) {
+    private void switchToDisconnectedMode() {
         isConnected = false;
         connect.setEnabled(true);
         disconnect.setEnabled(false);
@@ -141,25 +153,29 @@ public class ClientWindow extends JFrame {
         buttonPanel.setLayout(new GridBagLayout());
         JButton send = new JButton("Send");
         send.addActionListener(e -> {
-            if (tp == TransportProtocol.TCP) {
-                if (isConnected) {
-                    try {
-                        TCPDataOutput.writeUTF(textField.getText());
-                    } catch (IOException ioex) {
-                        JOptionPane.showMessageDialog(this, "IOExeption =(");
-                        ioex.printStackTrace();
+            if (isConnected) {
+                if (tp == TransportProtocol.TCP) {
+                    if (!socket.isOutputShutdown()) { // fixme
+                        try {
+                            dataOutput.writeUTF(textField.getText());
+                        } catch (IOException ioex) {
+                            JOptionPane.showMessageDialog(this, "IOExeption =(");
+                            ioex.printStackTrace();
+                        }
+                    } else {
+                        switchToDisconnectedMode();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(this, "Now you are not connected!");
+                    DatagramPacket datagramPacket = new DatagramPacket(textField.getText().getBytes(), textField.getText().length(), inetAddress, port);
+                    try {
+                        datagramSocket.send(datagramPacket);
+                    } catch (IOException ioex) {
+                        JOptionPane.showMessageDialog(this, ioex.getMessage());
+                        ioex.printStackTrace();
+                    }
                 }
             } else {
-                DatagramPacket datagramPacket = new DatagramPacket(textField.getText().getBytes(), textField.getText().length(), inetAddress, port);
-                try {
-                    datagramSocket.send(datagramPacket);
-                } catch (IOException ioex) {
-                    JOptionPane.showMessageDialog(this, ioex.getMessage());
-                    ioex.printStackTrace();
-                }
+                JOptionPane.showMessageDialog(this, "Now you are not connected!");
             }
         });
         buttonPanel.add(send);

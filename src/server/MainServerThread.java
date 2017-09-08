@@ -44,7 +44,8 @@ public class MainServerThread extends Thread {
                 DatagramPacket datagramPacket = new DatagramPacket(new byte[1024], 1024);
                 while (true) {
                     datagramSocket.receive(datagramPacket);
-                    textWriter.appendText(new String(datagramPacket.getData()));
+                    textWriter.appendText("Someone say: " + new String(datagramPacket.getData()));
+                    datagramPacket.setData(new byte[1024]);
                 }
             } catch (SocketException se) {
                 JOptionPane.showMessageDialog(null, se.getMessage());

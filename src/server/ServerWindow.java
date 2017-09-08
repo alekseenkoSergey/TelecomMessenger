@@ -61,6 +61,9 @@ public class ServerWindow extends JFrame {
         startServer.addActionListener(e -> {
             try {
                 int port = Integer.parseInt(fieldPort.getText());
+                if (port < 0 || port > 50000) {
+                    throw new IllegalArgumentException("Invalid port number!");
+                }
                 TransportProtocol tp;
                 if (fieldProtocol.getItemAt(fieldProtocol.getSelectedIndex()) == TransportProtocol.TCP) {
                     tp = TransportProtocol.TCP;
@@ -69,10 +72,12 @@ public class ServerWindow extends JFrame {
                 }
                 mainServerThread = new MainServerThread(tp, port, textWriter);
                 mainServerThread.start();
-                textWriter.appendText("Server started on port " + port);
+                textWriter.appendText("Server started by " + tp + " protocol on port " + port);
                 startServer.setEnabled(false);
             } catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(this, "Invalid port number!");
+            } catch (IllegalArgumentException iae) {
+                JOptionPane.showMessageDialog(this, iae.getMessage());
             }
         });
 

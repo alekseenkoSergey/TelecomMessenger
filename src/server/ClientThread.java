@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ClientThread extends Thread {
 
@@ -26,7 +27,7 @@ public class ClientThread extends Thread {
                     textWriter.appendText("Someone say: " + dataInput.readUTF());
                 }
             }
-        } catch (EOFException eof) {
+        } catch (EOFException | SocketException ex) {
             textWriter.appendText("One of the client was disconnected");
         } catch (IOException ioex) {
             JOptionPane.showMessageDialog(null, ioex.getMessage());
