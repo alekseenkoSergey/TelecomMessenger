@@ -9,6 +9,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.*;
 
+/* Наследуем наш класс-окно от JFrame чтобы добавлять сюда элементы интерфейса */
 public class ClientWindow extends JFrame {
 
     private TransportProtocol tp;
@@ -16,9 +17,11 @@ public class ClientWindow extends JFrame {
 
     private boolean isConnected;
 
+    // Переменные для передачи текста по TCP протоколу
     private Socket socket;
     private DataOutput dataOutput;
 
+    // Переменные для передачи текста по UDP протоколу
     private DatagramSocket datagramSocket;
     private InetAddress inetAddress;
 
@@ -26,8 +29,8 @@ public class ClientWindow extends JFrame {
     private JButton disconnect;
 
     public ClientWindow(String title) {
+        /* Настраиваем окно интерфейса */
         super(title);
-
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setLayout(new BorderLayout());
         this.setResizable(false);
@@ -37,6 +40,7 @@ public class ClientWindow extends JFrame {
     }
 
     private void addInterface() {
+        // Добавляем
         addConnectPanel();
         addMessagePanels();
     }
