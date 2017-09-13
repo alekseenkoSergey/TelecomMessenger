@@ -50,6 +50,7 @@ public class MainServerThread extends Thread {
                 e.printStackTrace();
             }
         } else {
+            // В случае UDP-протокола
             try {
                 // Создаем DatagramSocket на указаном порту для прослушки сообщений
                 DatagramSocket datagramSocket = new DatagramSocket(port);

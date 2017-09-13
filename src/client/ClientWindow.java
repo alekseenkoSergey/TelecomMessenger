@@ -40,7 +40,7 @@ public class ClientWindow extends JFrame {
     }
 
     private void addInterface() {
-        // Добавляем
+        // Добавляем элементы интерфейса
         addConnectPanel();
         addMessagePanels();
     }
@@ -63,22 +63,28 @@ public class ClientWindow extends JFrame {
         connect = new JButton("Connect");
         disconnect = new JButton("Disconnect");
         disconnect.setEnabled(false);
+        // Действия на кнопку Connect
         connect.addActionListener(e -> {
+            // Считываем номер порта
             try {
                 port = Integer.parseInt(fieldPort.getText());
             } catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(this, "Invalid port number!");
             }
+            // Считываем транспортный протокол
             if (fieldProtocol.getItemAt(fieldProtocol.getSelectedIndex()) == TransportProtocol.TCP) {
                 tp = TransportProtocol.TCP;
             } else {
                 tp = TransportProtocol.UDP;
             }
-
             if (tp == TransportProtocol.TCP) {
+                // В случае TCP-протокола
                 try {
+                    // Открываем новый сокет по указанным настройкам
                     socket = new Socket(fieldAddress.getText(), port);
+                    // Берем с него outputStream и оборачиваем его в DateOutputStream для комфортной передачи текста
                     dataOutput = new DataOutputStream(socket.getOutputStream());
+                    // Переключаем интерфейс в состояние "соединнен"
                     switchToConnectedMode();
                 } catch (IllegalArgumentException iae) {
                     JOptionPane.showMessageDialog(this, iae.getMessage());
@@ -90,21 +96,27 @@ public class ClientWindow extends JFrame {
                     ioex.printStackTrace();
                 }
             } else {
+                // В случае UDP-протокола
                 try {
+                    // Записываем адресс для посылки пакета
                     inetAddress = InetAddress.getByName(fieldAddress.getText());
+                    // Создаем новый DatagramSocket
                     datagramSocket = new DatagramSocket();
+                    /* Переключаем интерфейс в состояние "соединнен"
+                       Хотя на самом деле никакого "соединения" не установлено, мы просто запомнили адрес,
+                       куда будем посылать пакеты и создали DatagramSocket. */
                     switchToConnectedMode();
-                } catch (UnknownHostException uhe) {
+                } catch (UnknownHostException | SocketException uhe) {
                     JOptionPane.showMessageDialog(this, uhe.getMessage());
                     uhe.printStackTrace();
-                } catch (SocketException se) {
-                    JOptionPane.showMessageDialog(this, se.getMessage());
-                    se.printStackTrace();
                 }
             }
         });
+        // Действия на кнопку Disconnect
         disconnect.addActionListener(e -> {
+            // Закрываем сокет, обнуляем переменные
             if (tp == TransportProtocol.TCP) {
+                // В случае TCP-протокола
                 try {
                     socket.close();
                 } catch (IOException ioex) {
@@ -113,10 +125,12 @@ public class ClientWindow extends JFrame {
                 socket = null;
                 dataOutput = null;
             } else {
+                // В случае UDP-протокола
                 datagramSocket.close();
                 datagramSocket = null;
                 inetAddress = null;
             }
+            // Переключаем интерфейс в состояние "отсоединен"
             switchToDisconnectedMode();
         });
 
@@ -156,22 +170,29 @@ public class ClientWindow extends JFrame {
         JPanel buttonPanel = new JPanel(true);
         buttonPanel.setLayout(new GridBagLayout());
         JButton send = new JButton("Send");
+        // Действия на кнопку Send
         send.addActionListener(e -> {
+            // Проверяем флаг подключены ли мы вообще
             if (isConnected) {
                 if (tp == TransportProtocol.TCP) {
-                    if (!socket.isOutputShutdown()) { // fixme
+                    // В случае TCP-протокола
+                    if (!socket.isOutputShutdown()) {
                         try {
+                            // Если поток вывода не закрыт пишем в него текст из поля textField
                             dataOutput.writeUTF(textField.getText());
                         } catch (IOException ioex) {
-                            JOptionPane.showMessageDialog(this, "IOExeption =(");
+                            JOptionPane.showMessageDialog(this, ioex.getMessage());
                             ioex.printStackTrace();
                         }
                     } else {
                         switchToDisconnectedMode();
                     }
                 } else {
+                    // В случае UDP-протокола
+                    // Формируем DatagramPacket, в который запихиваем наш текст в байтовом представлении, указываем адрес отправки и порт
                     DatagramPacket datagramPacket = new DatagramPacket(textField.getText().getBytes(), textField.getText().length(), inetAddress, port);
                     try {
+                        // Отправляем через созданный ранее сокет
                         datagramSocket.send(datagramPacket);
                     } catch (IOException ioex) {
                         JOptionPane.showMessageDialog(this, ioex.getMessage());
