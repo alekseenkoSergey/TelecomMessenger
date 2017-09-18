@@ -7,7 +7,6 @@ import java.awt.*;
 
 /* Наследуем наш класс-окно от JFrame чтобы добавлять сюда элементы интерфейса */
 public class ServerWindow extends JFrame {
-    private JTextArea textArea;
 
     private TextWriter textWriter;
 
@@ -33,13 +32,13 @@ public class ServerWindow extends JFrame {
         JPanel textPanel = new JPanel(true);
         textPanel.setLayout(new BorderLayout());
 
-        textArea = new JTextArea();
+        JTextArea textArea = new JTextArea();
         textArea.setColumns(50);
         textArea.setRows(30);
         textArea.setEditable(false);
         textArea.setLineWrap(true);
         /* Создаем объект, который будет писать в текстовую панель */
-        textWriter = new TextWriter(this.textArea);
+        textWriter = new TextWriter(textArea);
 
         textPanel.add(textArea, BorderLayout.WEST);
 
